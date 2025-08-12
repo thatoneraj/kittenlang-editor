@@ -90,6 +90,7 @@
       gap: 1rem;
       margin: 1rem 0 0 0;
       flex-wrap: wrap;
+      align-items: center;
     }
     button {
       padding: 0.6rem 1.2rem;
@@ -162,32 +163,41 @@
         margin: 0.5rem 0 1rem 0;
       }
     }
-  #controls {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 1rem;
-  }
-  
-  #extraControls {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1rem;
-    width: 100%;
-  }
-  
-  /* On desktop, show all controls inline */
-  @media (min-width: 601px) {
     #toggleExtraControls {
-      display: none;
+      padding: 0.3rem 0.6rem;
+      font-size: 0.8rem;
+      border-radius: 10px;
+      background: var(--accent);
+      color: white;
+      user-select: none;
+      cursor: pointer;
+      box-shadow: 0 2px 4px rgba(214,107,160,0.5);
+      transition: background-color 0.3s ease;
+      flex-shrink: 0;
+    }
+    #toggleExtraControls:hover,
+    #toggleExtraControls:focus {
+      background: var(--error);
+      outline: none;
     }
     #extraControls {
-      display: flex !important;
-      margin-top: 0;
-      width: auto;
+      display: none;
+      gap: 1rem;
+      margin-top: 0.5rem;
+      flex-wrap: wrap;
+      justify-content: center;
     }
-  }
-
+    /* On desktop, show all controls inline */
+    @media (min-width: 601px) {
+      #toggleExtraControls {
+        display: none;
+      }
+      #extraControls {
+        display: flex !important;
+        margin-top: 0;
+        width: auto;
+      }
+    }
   </style>
 </head>
 <body>
@@ -216,18 +226,16 @@
     <button id="runBtn" aria-label="Run Python code">Run 🐱</button>
   
     <button id="toggleExtraControls" aria-expanded="false" aria-controls="extraControls" 
-      style="margin-left: 1rem; border-radius: 15px; background: var(--accent); color: white; font-weight: 700; font-size: 1rem; cursor: pointer;">
-      Show Controls ▼
+      title="Show/Hide extra controls">
+      ▼
     </button>
   
-    <div id="extraControls" style="display:none; gap:1rem; margin-top: 0.5rem;">
+    <div id="extraControls">
       <button id="clearLeft" aria-label="Clear left input">Clear Left</button>
       <button id="clearRight" aria-label="Clear right output">Clear Right</button>
       <button id="clearTerminal" aria-label="Clear terminal output">Clear Terminal</button>
     </div>
   </div>
-
-
 
   <div id="terminal" role="region" aria-live="polite" aria-atomic="false" aria-label="Terminal output">
     <div id="terminal-output"></div>
@@ -394,6 +402,8 @@
     const clearTerminal = document.getElementById("clearTerminal");
     const terminalOutput = document.getElementById("terminal-output");
     const terminalInput = document.getElementById("terminal-input");
+    const toggleBtn = document.getElementById("toggleExtraControls");
+    const extraControls = document.getElementById("extraControls");
 
     // Prevent circular events on editing
     let isUpdatingLeft = false;
@@ -432,13 +442,26 @@
       isUpdatingLeft = false;
     });
 
+    // Toggle extra controls
+    toggleBtn.addEventListener("click", () => {
+      const isVisible = extraControls.style.display === "flex";
+      if (isVisible) {
+        extraControls.style.display = "none";
+        toggleBtn.textContent = "▼";
+        toggleBtn.setAttribute("aria-expanded", "false");
+      } else {
+        extraControls.style.display = "flex";
+        toggleBtn.textContent = "▲";
+        toggleBtn.setAttribute("aria-expanded", "true");
+      }
+    });
+
     // --- Pyodide setup and interactive terminal ---
 
     let pyodideReady = false;
     let pyodide = null;
 
     // Input queue for Python input()
-    let inputQueue = [];
     let inputResolver = null;
 
     // Append text to terminal with optional error styling
@@ -455,43 +478,25 @@
     async function initPyodide() {
       appendToTerminal("🐾 Loading Python runtime...");
       pyodide = await loadPyodide();
+
       // Override input to await input from terminal input line
       await pyodide.runPythonAsync(`
-import sys
+import builtins
 import asyncio
 
-class JsInput:
-    def __init__(self):
-        self.loop = asyncio.get_event_loop()
-    async def readline_async(self):
-        from js import get_input
-        line = await get_input()
-        return line + "\\n"
-    def readline(self):
-        # fallback blocking read (should never happen)
-        return input()
-import builtins
-input_queue = []
 async def input_override(prompt=None):
-    from js import terminal_input_enabled, enable_terminal_input, disable_terminal_input, wait_for_input
+    from js import enable_terminal_input, disable_terminal_input, wait_for_input
     if prompt:
         print(prompt, end='')
     enable_terminal_input()
     line = await wait_for_input()
     disable_terminal_input()
     return line
+
 builtins.input = input_override
       `);
 
       // JS functions exposed to Pyodide for async input
-      pyodide.globals.set("get_input", () => {
-        return new Promise(resolve => {
-          inputResolver = resolve;
-          terminalInput.disabled = false;
-          terminalInput.focus();
-        });
-      });
-
       pyodide.globals.set("wait_for_input", () => {
         return new Promise(resolve => {
           inputResolver = resolve;
@@ -500,11 +505,9 @@ builtins.input = input_override
         });
       });
 
-      // Helper to disable terminal input line
       window.disable_terminal_input = () => {
         terminalInput.disabled = true;
       };
-      // Helper to enable terminal input line
       window.enable_terminal_input = () => {
         terminalInput.disabled = false;
         terminalInput.focus();
@@ -536,11 +539,21 @@ builtins.input = input_override
       terminalInput.value = "";
       terminalInput.disabled = true;
 
-      // Use rightOutput value (Python code)
-      let code = rightOutput.value.trim();
+      let code = leftInput.value.trim();
+
+      // Detect if left input is KittenLang by checking keywords
+      const isKittenLang = Object.keys(kittenToPython).some(w => code.includes(w));
+
+      if (isKittenLang) {
+        // Convert KittenLang → Python
+        code = kittenToPythonTranslate(code);
+        rightOutput.value = code;  // Update right output to show Python code
+      } else {
+        // If not KittenLang, run Python from rightOutput
+        code = rightOutput.value.trim();
+      }
 
       try {
-        // Redirect stdout/stderr to terminal
         pyodide.setStdout({
           batched: (s) => appendToTerminal(s),
         });
@@ -548,7 +561,6 @@ builtins.input = input_override
           batched: (s) => appendToTerminal(s, true),
         });
 
-        // Run async code and await completion
         await pyodide.runPythonAsync(code);
         appendToTerminal("🐾 Program finished.");
       } catch (err) {
@@ -567,26 +579,7 @@ builtins.input = input_override
     runBtn.onclick = runPythonCode;
 
     window.onload = initPyodide;
-const toggleBtn = document.getElementById("toggleExtraControls");
-const extraControls = document.getElementById("extraControls");
-
-toggleBtn.addEventListener("click", () => {
-  const isVisible = extraControls.style.display === "flex";
-  if (isVisible) {
-    extraControls.style.display = "none";
-    toggleBtn.textContent = "Show Controls ▼";
-    toggleBtn.setAttribute("aria-expanded", "false");
-  } else {
-    extraControls.style.display = "flex";
-    toggleBtn.textContent = "Hide Controls ▲";
-    toggleBtn.setAttribute("aria-expanded", "true");
-  }
-});
 
   </script>
 </body>
 </html>
-
-
-
-
