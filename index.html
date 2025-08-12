@@ -188,10 +188,25 @@
 
   <div id="controls">
     <button id="runBtn" aria-label="Run Python code">Run 🐱</button>
-    <button id="clearLeft" aria-label="Clear left input">Clear Left</button>
-    <button id="clearRight" aria-label="Clear right output">Clear Right</button>
-    <button id="clearTerminal" aria-label="Clear terminal output">Clear Terminal</button>
+  
+    <details id="mobile-controls" style="display:none;">
+      <summary style="cursor:pointer; color: var(--accent); font-weight:700; font-size:1rem; user-select:none;">
+        Other Controls ▼
+      </summary>
+      <div style="display:flex; flex-direction: column; gap: 0.5rem; margin-top: 0.5rem;">
+        <button id="clearLeft" aria-label="Clear left input">Clear Left</button>
+        <button id="clearRight" aria-label="Clear right output">Clear Right</button>
+        <button id="clearTerminal" aria-label="Clear terminal output">Clear Terminal</button>
+      </div>
+    </details>
+  
+    <div id="desktop-controls" style="display:flex; gap:1rem;">
+      <button id="clearLeft" aria-label="Clear left input">Clear Left</button>
+      <button id="clearRight" aria-label="Clear right output">Clear Right</button>
+      <button id="clearTerminal" aria-label="Clear terminal output">Clear Terminal</button>
+    </div>
   </div>
+
 
   <div id="terminal" role="region" aria-live="polite" aria-atomic="false" aria-label="Terminal output">
     <div id="terminal-output"></div>
@@ -535,3 +550,4 @@ builtins.input = input_override
   </script>
 </body>
 </html>
+
