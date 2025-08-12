@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en" >
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>🐾 KittenLang & Python Editor + Terminal</title>
+  <style>
+    /* Girly pastel theme */
+    :root {
+      --bg: #fff0f6;
+      --bg-dark: #f7d6e0;
+      --text: #572a4e;
+      --text-light: #a75893;
+      --accent: #d66ba0;
+      --accent-light: #f9cee6;
+      --border: #f0a6ca;
+      --error: #e75480;
+      --font: 'Comic Sans MS', cursive, sans-serif;
+    }
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0; font-family: var(--font);
+      display: flex; flex-direction: column;
+      height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+    }
+    h1 {
+      text-align: center;
+      padding: 1rem 0 0 0;
+      font-weight: 900;
+      font-size: 2.2rem;
+      letter-spacing: 0.1em;
+      color: var(--accent);
+      user-select: none;
+    }
+    #container {
+      flex: 1;
+      display: flex;
+      flex-direction: row;
+      gap: 1rem;
+      padding: 1rem;
+      min-height: 0;
+    }
+    textarea {
+      flex: 1;
+      padding: 1rem;
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      background: var(--bg-dark);
+      color: var(--text);
+      font-family: monospace, monospace;
+      font-size: 14px;
+      line-height: 1.4;
+      resize: none;
+      overflow-y: auto;
+      min-height: 300px;
+      transition: border-color 0.3s ease;
+    }
+    textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+      background: #ffe6f0;
+    }
+    label {
+      display: block;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      color: var(--accent);
+    }
+    .panel {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      min-width: 0;
+    }
+    #translate-info {
+      font-size: 0.9rem;
+      color: var(--text-light);
+      margin-bottom: 0.5rem;
+      user-select: none;
+      font-style: italic;
+      text-align: center;
+    }
+    #controls {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      margin: 1rem 0 0 0;
+      flex-wrap: wrap;
+    }
+    button {
+      padding: 0.6rem 1.2rem;
+      border: none;
+      border-radius: 15px;
+      background: var(--accent);
+      color: white;
+      font-weight: 700;
+      font-size: 1rem;
+      cursor: pointer;
+      box-shadow: 0 3px 6px rgba(214,107,160,0.5);
+      transition: background-color 0.3s ease;
+      user-select: none;
+      flex-shrink: 0;
+    }
+    button:hover, button:focus {
+      background: var(--error);
+      outline: none;
+    }
+    #terminal {
+      margin: 1rem;
+      background: var(--bg-dark);
+      border-radius: 10px;
+      border: 2px solid var(--border);
+      height: 200px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      font-family: monospace;
+      color: var(--text);
+    }
+    #terminal-output {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1rem;
+      white-space: pre-wrap;
+      background: #ffd9e8;
+      border-bottom: 2px solid var(--border);
+      user-select: text;
+    }
+    #terminal-input-container {
+      display: flex;
+      border-top: 2px solid var(--border);
+      background: #fce9f2;
+      padding: 0.5rem 1rem;
+    }
+    #terminal-input {
+      flex: 1;
+      border: none;
+      background: transparent;
+      font-family: monospace;
+      font-size: 16px;
+      color: var(--accent);
+      padding: 0.25rem 0.5rem;
+    }
+    #terminal-input:focus {
+      outline: none;
+    }
+    /* Responsive: stack vertically on small screens */
+    @media (max-width: 900px) {
+      #container {
+        flex-direction: column;
+        padding: 1rem 0.5rem;
+      }
+      textarea {
+        min-height: 180px;
+      }
+      #terminal {
+        height: 180px;
+        margin: 0.5rem 0 1rem 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>🐾 KittenLang & Python Editor + Terminal</h1>
+  <div id="container">
+    <section class="panel" aria-label="Python or KittenLang input">
+      <label for="leftInput">Left (Python or KittenLang)</label>
+      <textarea id="leftInput" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off"
+        aria-describedby="leftDesc" placeholder="Write Python or KittenLang code here..."></textarea>
+      <div id="leftDesc" style="font-size: 0.8rem; margin-top: 0.2rem; color: var(--text-light); user-select:none;">
+        Write code here. Left ↔ Right auto-translates.
+      </div>
+    </section>
+
+    <section class="panel" aria-label="KittenLang or Python output">
+      <label for="rightOutput">Right (KittenLang or Python)</label>
+      <textarea id="rightOutput" spellcheck="false" readonly aria-readonly="true"
+        aria-describedby="rightDesc" placeholder="Translated code appears here..." ></textarea>
+      <div id="rightDesc" style="font-size: 0.8rem; margin-top: 0.2rem; color: var(--text-light); user-select:none;">
+        Translated code. Edits here also translate back left.
+      </div>
+    </section>
+  </div>
+
+  <div id="controls">
+    <button id="runBtn" aria-label="Run Python code">Run 🐱</button>
+    <button id="clearLeft" aria-label="Clear left input">Clear Left</button>
+    <button id="clearRight" aria-label="Clear right output">Clear Right</button>
+    <button id="clearTerminal" aria-label="Clear terminal output">Clear Terminal</button>
+  </div>
+
+  <div id="terminal" role="region" aria-live="polite" aria-atomic="false" aria-label="Terminal output">
+    <div id="terminal-output"></div>
+    <div id="terminal-input-container">
+      <input id="terminal-input" aria-label="Terminal input line" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" disabled />
+    </div>
+  </div>
+
+  <!-- Pyodide -->
+  <script src="https://cdn.jsdelivr.net/pyodide/v0.23.4/full/pyodide.js"></script>
+  <script>
+    // === KittenLang dictionary ===
+    const pythonToKitten = {
+      def: "lick",
+      class: "clawss",
+      return: "bring",
+      yield: "drop",
+      pass: "napass",
+      break: "pawbreak",
+      continue: "pawtinue",
+      if: "nya",
+      elif: "nyan",
+      else: "meow",
+      for: "paw",
+      while: "mrr",
+      try: "purr",
+      except: "hiss",
+      finally: "stretch",
+      with: "snuggle",
+      as: "fluff",
+      import: "fetch",
+      from: "scruff",
+      global: "catwide",
+      nonlocal: "nocatwide",
+      lambda: "kitbda",
+      del: "scratchout",
+      assert: "pawfirm",
+      raise: "hissup",
+      async: "prowl",
+      await: "waitpaw",
+      match: "clawmatch",
+      case: "pawsome",
+      and: "pawand",
+      or: "pawor",
+      not: "nopaw",
+      in: "whiskin",
+      is: "isfur",
+      True: "yarn",
+      False: "nap",
+      None: "nada",
+      print: "cattype",
+      input: "catnap",
+      len: "tail",
+      open: "scratch",
+      range: "leap",
+      list: "litter",
+      dict: "basket",
+      set: "purrset",
+      int: "whiskint",
+      float: "milkfloat",
+      str: "furstr",
+      bool: "meowbool",
+      type: "pawtype",
+      zip: "buddyup",
+      map: "changeall",
+      filter: "pickpaw",
+      any: "someone",
+      all: "everyone",
+      sum: "totaltreats",
+      min: "smallestpaw",
+      max: "biggestpaw",
+      abs: "jump",
+      sorted: "orderup",
+      round: "roundbowl",
+      enumerate: "rollcall",
+    };
+
+    const kittenToPython = Object.fromEntries(
+      Object.entries(pythonToKitten).map(([k, v]) => [v, k])
+    );
+
+    // Operator mappings
+    const operatorPythonToKitten = [
+      [/\!=/g, "!:33"],
+      [/==/g, ":33"],
+      [/>=/g, ">:33"],
+      [/<=/g, "<:33"],
+      [/>>=/g, ">>:3"],
+      [/<<=/g, "<<:3"],
+      [/\*\*=/g, "**:3"],
+      [/\+=/g, "+:3"],
+      [/-=/g, "-:3"],
+      [/\*=/g, "*:3"],
+      [/\/=/g, "/:3"],
+      [/\/\/=/g, "//:3"],
+      [/%=/g, "%:3"],
+      [/&=/g, "&:3"],
+      [/\|=/g, "|:3"],
+      [/\^=/g, "^:3"],
+      [/=/g, ":3"],
+    ];
+
+    const operatorKittenToPython = [
+      [/\!:33/g, "!="],
+      [/:33/g, "=="],
+      [/>:33/g, ">="],
+      [/<:33/g, "<="],
+      [/>>:3/g, ">>="],
+      [/<<:3/g, "<<="],
+      [/\*\*:3/g, "**="],
+      [/\+:3/g, "+="],
+      [/-:3/g, "-="],
+      [/\*:3/g, "*="],
+      [/\/:3/g, "/="],
+      [/\/\/:3/g, "//="],
+      [/%:3/g, "%="],
+      [/&:3/g, "&="],
+      [/\|:3/g, "|="],
+      [/\^:3/g, "^="],
+      [/:3/g, "="],
+    ];
+
+    // Escape regex helper
+    function escapeRegex(s) {
+      return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    }
+
+    // Translate Python → KittenLang
+    function pythonToKittenTranslate(code) {
+      operatorPythonToKitten.forEach(([pattern, replacement]) => {
+        code = code.replace(pattern, replacement);
+      });
+
+      Object.keys(pythonToKitten)
+        .sort((a, b) => b.length - a.length)
+        .forEach(k => {
+          const regex = new RegExp("\\b" + escapeRegex(k) + "\\b", "g");
+          code = code.replace(regex, pythonToKitten[k]);
+        });
+      return code;
+    }
+
+    // Translate KittenLang → Python
+    function kittenToPythonTranslate(code) {
+      operatorKittenToPython.forEach(([pattern, replacement]) => {
+        code = code.replace(pattern, replacement);
+      });
+
+      Object.keys(kittenToPython)
+        .sort((a, b) => b.length - a.length)
+        .forEach(k => {
+          const regex = new RegExp("\\b" + escapeRegex(k) + "\\b", "g");
+          code = code.replace(regex, kittenToPython[k]);
+        });
+      return code;
+    }
+
+    // Elements
+    const leftInput = document.getElementById("leftInput");
+    const rightOutput = document.getElementById("rightOutput");
+    const runBtn = document.getElementById("runBtn");
+    const clearLeft = document.getElementById("clearLeft");
+    const clearRight = document.getElementById("clearRight");
+    const clearTerminal = document.getElementById("clearTerminal");
+    const terminalOutput = document.getElementById("terminal-output");
+    const terminalInput = document.getElementById("terminal-input");
+
+    // Prevent circular events on editing
+    let isUpdatingLeft = false;
+    let isUpdatingRight = false;
+
+    // Update right when left changes (auto detect Python or KittenLang)
+    leftInput.addEventListener("input", () => {
+      if (isUpdatingLeft) return;
+      isUpdatingRight = true;
+
+      const code = leftInput.value.trim();
+      // Heuristic: if code contains kitten keywords replace right with Python else KittenLang
+      const hasKittenWords = Object.keys(kittenToPython).some(w => code.includes(w));
+      if (hasKittenWords) {
+        rightOutput.value = kittenToPythonTranslate(code);
+      } else {
+        rightOutput.value = pythonToKittenTranslate(code);
+      }
+
+      isUpdatingRight = false;
+    });
+
+    // Update left when right changes
+    rightOutput.addEventListener("input", () => {
+      if (isUpdatingRight) return;
+      isUpdatingLeft = true;
+
+      const code = rightOutput.value.trim();
+      const hasPythonWords = Object.keys(pythonToKitten).some(w => code.includes(w));
+      if (hasPythonWords) {
+        leftInput.value = pythonToKittenTranslate(code);
+      } else {
+        leftInput.value = kittenToPythonTranslate(code);
+      }
+
+      isUpdatingLeft = false;
+    });
+
+    // --- Pyodide setup and interactive terminal ---
+
+    let pyodideReady = false;
+    let pyodide = null;
+
+    // Input queue for Python input()
+    let inputQueue = [];
+    let inputResolver = null;
+
+    // Append text to terminal with optional error styling
+    function appendToTerminal(text, isError = false) {
+      const span = document.createElement("span");
+      span.textContent = text;
+      if (isError) span.style.color = "var(--error)";
+      terminalOutput.appendChild(span);
+      terminalOutput.appendChild(document.createElement("br"));
+      terminalOutput.scrollTop = terminalOutput.scrollHeight;
+    }
+
+    // Initialize pyodide
+    async function initPyodide() {
+      appendToTerminal("🐾 Loading Python runtime...");
+      pyodide = await loadPyodide();
+      // Override input to await input from terminal input line
+      await pyodide.runPythonAsync(`
+import sys
+import asyncio
+
+class JsInput:
+    def __init__(self):
+        self.loop = asyncio.get_event_loop()
+    async def readline_async(self):
+        from js import get_input
+        line = await get_input()
+        return line + "\\n"
+    def readline(self):
+        # fallback blocking read (should never happen)
+        return input()
+import builtins
+input_queue = []
+async def input_override(prompt=None):
+    from js import terminal_input_enabled, enable_terminal_input, disable_terminal_input, wait_for_input
+    if prompt:
+        print(prompt, end='')
+    enable_terminal_input()
+    line = await wait_for_input()
+    disable_terminal_input()
+    return line
+builtins.input = input_override
+      `);
+
+      // JS functions exposed to Pyodide for async input
+      pyodide.globals.set("get_input", () => {
+        return new Promise(resolve => {
+          inputResolver = resolve;
+          terminalInput.disabled = false;
+          terminalInput.focus();
+        });
+      });
+
+      pyodide.globals.set("wait_for_input", () => {
+        return new Promise(resolve => {
+          inputResolver = resolve;
+          terminalInput.disabled = false;
+          terminalInput.focus();
+        });
+      });
+
+      // Helper to disable terminal input line
+      window.disable_terminal_input = () => {
+        terminalInput.disabled = true;
+      };
+      // Helper to enable terminal input line
+      window.enable_terminal_input = () => {
+        terminalInput.disabled = false;
+        terminalInput.focus();
+      };
+
+      pyodideReady = true;
+      appendToTerminal("🐾 Python runtime ready! Paste your Python or KittenLang code and hit Run.");
+    }
+
+    // When user presses Enter in terminal input, resolve promise with input line
+    terminalInput.addEventListener("keydown", e => {
+      if (e.key === "Enter" && inputResolver) {
+        const val = terminalInput.value;
+        terminalInput.value = "";
+        terminalInput.disabled = true;
+        appendToTerminal("> " + val);
+        inputResolver(val);
+        inputResolver = null;
+      }
+    });
+
+    // Run Python code
+    async function runPythonCode() {
+      if (!pyodideReady) {
+        appendToTerminal("🐾 Python runtime is not ready yet.");
+        return;
+      }
+      terminalOutput.textContent = "";
+      terminalInput.value = "";
+      terminalInput.disabled = true;
+
+      // Use rightOutput value (Python code)
+      let code = rightOutput.value.trim();
+
+      try {
+        // Redirect stdout/stderr to terminal
+        pyodide.setStdout({
+          batched: (s) => appendToTerminal(s),
+        });
+        pyodide.setStderr({
+          batched: (s) => appendToTerminal(s, true),
+        });
+
+        // Run async code and await completion
+        await pyodide.runPythonAsync(code);
+        appendToTerminal("🐾 Program finished.");
+      } catch (err) {
+        appendToTerminal("🐾 Error: " + err.message, true);
+      } finally {
+        terminalInput.disabled = true;
+        inputResolver = null;
+      }
+    }
+
+    // Clear handlers
+    clearLeft.onclick = () => { leftInput.value = ""; rightOutput.value = ""; };
+    clearRight.onclick = () => { rightOutput.value = ""; leftInput.value = ""; };
+    clearTerminal.onclick = () => { terminalOutput.textContent = ""; };
+
+    runBtn.onclick = runPythonCode;
+
+    window.onload = initPyodide;
+
+  </script>
+</body>
+</html>
