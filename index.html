@@ -531,45 +531,66 @@ builtins.input = input_override
 
     // Run Python code
     async function runPythonCode() {
-      if (!pyodideReady) {
+    if (!pyodideReady) {
         appendToTerminal("🐾 Python runtime is not ready yet.");
         return;
-      }
-      terminalOutput.textContent = "";
-      terminalInput.value = "";
-      terminalInput.disabled = true;
+    }
+    terminalOutput.textContent = "";
+    terminalInput.value = "";
+    terminalInput.disabled = true;
 
-      let code = leftInput.value.trim();
+    let codeLeft = leftInput.value.trim();
+    let codeRight = rightOutput.value.trim();
 
-      // Detect if left input is KittenLang by checking keywords
-      const isKittenLang = Object.keys(kittenToPython).some(w => code.includes(w));
+    // We want to run Python code, so first check if left or right has KittenLang and translate them
 
-      if (isKittenLang) {
-        // Convert KittenLang → Python
-        code = kittenToPythonTranslate(code);
-        rightOutput.value = code;  // Update right output to show Python code
-      } else {
-        // If not KittenLang, run Python from rightOutput
-        code = rightOutput.value.trim();
-      }
+    // We'll assume left is "main" source if not empty, else right
+    let codeToRun = "";
 
-      try {
+    // Heuristic: if left input contains KittenLang keywords → translate left to Python and run
+    const isLeftKitten = Object.keys(kittenToPython).some(w => codeLeft.includes(w));
+    const isRightKitten = Object.keys(kittenToPython).some(w => codeRight.includes(w));
+
+    if (codeLeft.length > 0) {
+        if (isLeftKitten) {
+        codeToRun = kittenToPythonTranslate(codeLeft);
+        rightOutput.value = codeToRun; // sync right side
+        } else {
+        codeToRun = codeLeft; // assume Python
+        rightOutput.value = pythonToKittenTranslate(codeLeft); // sync right side
+        }
+    } else if (codeRight.length > 0) {
+        // If left is empty, run right side (assumed Python or translate if Kitten)
+        if (isRightKitten) {
+        codeToRun = kittenToPythonTranslate(codeRight);
+        leftInput.value = codeToRun; // sync left side
+        } else {
+        codeToRun = codeRight;
+        leftInput.value = pythonToKittenTranslate(codeRight);
+        }
+    } else {
+        appendToTerminal("🐾 No code to run!");
+        return;
+    }
+
+    try {
         pyodide.setStdout({
-          batched: (s) => appendToTerminal(s),
+        batched: (s) => appendToTerminal(s),
         });
         pyodide.setStderr({
-          batched: (s) => appendToTerminal(s, true),
+        batched: (s) => appendToTerminal(s, true),
         });
 
-        await pyodide.runPythonAsync(code);
+        await pyodide.runPythonAsync(codeToRun);
         appendToTerminal("🐾 Program finished.");
-      } catch (err) {
+    } catch (err) {
         appendToTerminal("🐾 Error: " + err.message, true);
-      } finally {
+    } finally {
         terminalInput.disabled = true;
         inputResolver = null;
-      }
     }
+    }
+
 
     // Clear handlers
     clearLeft.onclick = () => { leftInput.value = ""; rightOutput.value = ""; };
