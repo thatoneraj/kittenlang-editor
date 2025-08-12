@@ -1,257 +1,162 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" >
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>🐾 KittenLang & Python Editor + Terminal Tabs</title>
-<style>
-  :root {
-    --bg: #fff0f6;
-    --bg-dark: #f7d6e0;
-    --text: #572a4e;
-    --text-light: #a75893;
-    --accent: #d66ba0;
-    --accent-light: #f9cee6;
-    --border: #f0a6ca;
-    --error: #e75480;
-    --font: 'Comic Sans MS', cursive, sans-serif;
-  }
-
-  body {
-    margin: 0;
-    font-family: var(--font);
-    background: var(--bg);
-    color: var(--text);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-  }
-
-  #app {
-    width: 100%;
-    max-width: 900px;
-    height: 650px;
-    background: var(--bg-dark);
-    border: 2px solid var(--border);
-    border-radius: 12px;
-    display: flex;
-    flex-direction: column;
-  }
-
-  /* Tabs container */
-  #tabs {
-    display: flex;
-    background: var(--bg);
-    border-bottom: 2px solid var(--border);
-    user-select: none;
-    overflow-x: auto;
-  }
-  #tabs::-webkit-scrollbar {
-    height: 6px;
-  }
-  #tabs::-webkit-scrollbar-thumb {
-    background: var(--accent-light);
-    border-radius: 3px;
-  }
-
-  /* Each tab button */
-  .tab {
-    flex-shrink: 0;
-    padding: 10px 20px;
-    cursor: pointer;
-    border-top-left-radius: 12px;
-    border-top-right-radius: 12px;
-    font-weight: 700;
-    color: var(--accent);
-    background: var(--bg);
-    border: 2px solid transparent;
-    border-bottom: 0;
-    transition: background-color 0.3s ease, color 0.3s ease;
-  }
-
-  .tab:hover {
-    background: var(--accent-light);
-  }
-
-  /* Active tab */
-  .tab.active {
-    background: white;
-    color: var(--text);
-    border-color: var(--border);
-    border-bottom: 2px solid white; /* seamless with content */
-  }
-
-  /* Content area */
-  #content {
-    flex: 1;
-    padding: 1rem;
-    background: white;
-    border-left: 2px solid var(--border);
-    border-right: 2px solid var(--border);
-    border-bottom: 2px solid var(--border);
-    border-radius: 0 0 10px 10px;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-  }
-
-  /* Panels */
-  .panel {
-    flex: 1;
-    display: none;
-    flex-direction: column;
-  }
-  .panel.active {
-    display: flex;
-  }
-
-  textarea {
-    flex: 1;
-    padding: 1rem;
-    border: 2px solid var(--border);
-    border-radius: 10px;
-    background: var(--bg-dark);
-    color: var(--text);
-    font-family: monospace, monospace;
-    font-size: 14px;
-    line-height: 1.4;
-    resize: none;
-    overflow-y: auto;
-    min-height: 300px;
-    transition: border-color 0.3s ease;
-  }
-  textarea:focus {
-    outline: none;
-    border-color: var(--accent);
-    background: #ffe6f0;
-  }
-
-  /* Terminal */
-  #terminal-output {
-    flex: 1;
-    overflow-y: auto;
-    padding: 1rem;
-    white-space: pre-wrap;
-    background: #ffd9e8;
-    border-radius: 10px 10px 0 0;
-    user-select: text;
-  }
-  #terminal-input-container {
-    display: flex;
-    border-top: 2px solid var(--border);
-    background: #fce9f2;
-    padding: 0.5rem 1rem;
-  }
-  #terminal-input {
-    flex: 1;
-    border: none;
-    background: transparent;
-    font-family: monospace;
-    font-size: 16px;
-    color: var(--accent);
-    padding: 0.25rem 0.5rem;
-  }
-  #terminal-input:focus {
-    outline: none;
-  }
-
-  /* Controls below content */
-  #controls {
-    padding: 0.7rem 1rem;
-    background: var(--bg);
-    border-top: 2px solid var(--border);
-    display: flex;
-    gap: 1rem;
-    flex-wrap: wrap;
-  }
-  button {
-    padding: 0.5rem 1.2rem;
-    border: none;
-    border-radius: 15px;
-    background: var(--accent);
-    color: white;
-    font-weight: 700;
-    font-size: 1rem;
-    cursor: pointer;
-    box-shadow: 0 3px 6px rgba(214,107,160,0.5);
-    transition: background-color 0.3s ease;
-    user-select: none;
-  }
-  button:hover, button:focus {
-    background: var(--error);
-    outline: none;
-  }
-
-  /* Responsive: tabs scroll horizontal, content full height */
-  @media (max-width: 600px) {
-    #app {
-      height: 100vh;
-      border-radius: 0;
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Python & KittenLang Tab-based Converter</title>
+  <style>
+    :root {
+      --bg: #fff0f6;
+      --bg-dark: #f7d6e0;
+      --text: #572a4e;
+      --text-light: #a75893;
+      --accent: #d66ba0;
+      --accent-light: #f9cee6;
+      --border: #f0a6ca;
+      --font: 'Comic Sans MS', cursive, sans-serif;
     }
-  }
-</style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0; font-family: var(--font);
+      display: flex; flex-direction: column;
+      height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      user-select: none;
+    }
+    h1 {
+      text-align: center;
+      padding: 1rem 0 0.5rem 0;
+      font-weight: 900;
+      font-size: 2.2rem;
+      letter-spacing: 0.1em;
+      color: var(--accent);
+      user-select: none;
+    }
+    #container {
+      max-width: 900px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      background: var(--bg-dark);
+      box-shadow: 0 5px 15px rgba(214,107,160,0.3);
+    }
+    /* Tabs */
+    #tabs {
+      display: flex;
+      border-bottom: 2px solid var(--border);
+      background: var(--accent-light);
+      user-select: none;
+    }
+    .tab {
+      flex: 1;
+      padding: 0.75rem 0;
+      text-align: center;
+      cursor: pointer;
+      font-weight: 700;
+      color: var(--accent);
+      border-bottom: 3px solid transparent;
+      transition: background-color 0.3s ease, border-bottom-color 0.3s ease;
+    }
+    .tab:hover:not(.active) {
+      background: var(--accent);
+      color: white;
+    }
+    .tab.active {
+      background: white;
+      border-bottom-color: var(--accent);
+      color: var(--accent);
+      font-weight: 900;
+    }
+
+    /* Editor area */
+    .editor-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 1rem;
+      box-sizing: border-box;
+      background: white;
+      border-radius: 0 0 10px 10px;
+    }
+    textarea {
+      flex: 1;
+      width: 100%;
+      resize: none;
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      padding: 1rem;
+      font-family: monospace;
+      font-size: 14px;
+      line-height: 1.4;
+      color: var(--text);
+      background: var(--bg-dark);
+      transition: border-color 0.3s ease;
+      overflow-y: auto;
+    }
+    textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+      background: #ffe6f0;
+    }
+    /* Responsive */
+    @media (max-width: 600px) {
+      h1 {
+        font-size: 1.6rem;
+        padding-top: 0.8rem;
+      }
+      .tab {
+        font-size: 0.9rem;
+        padding: 0.5rem 0;
+      }
+    }
+#container {
+  width: 90vw;          /* 90% of viewport width */
+  max-width: 900px;     /* max width for big screens */
+  min-width: 280px;     /* minimum width for small devices */
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg-dark);
+  box-shadow: 0 5px 15px rgba(214,107,160,0.3);
+}
+#container {
+  font-family: 'Comic Sans MS', cursive, sans-serif;
+  /* plus the other styles */
+}
+
+textarea {
+  font-family: 'Comic Sans MS', cursive, sans-serif;
+  /* other existing styles */
+}
+
+
+  </style>
 </head>
 <body>
-  <div id="app" role="main" aria-label="KittenLang and Python Editor with Terminal Tabs">
-    <nav id="tabs" role="tablist" aria-label="Editor and Output Tabs">
-      <button class="tab active" role="tab" aria-selected="true" aria-controls="panel-output" id="tab-output">Output</button>
-      <button class="tab" role="tab" aria-selected="false" aria-controls="panel-python" id="tab-python">Python</button>
-      <button class="tab" role="tab" aria-selected="false" aria-controls="panel-kitten" id="tab-kitten">KittenLang</button>
-    </nav>
+  <h1>🐾 Python & KittenLang Converter</h1>
+  <div id="container" role="region" aria-label="Python and KittenLang editor tabs">
+    <div id="tabs" role="tablist">
+      <button role="tab" id="tab-python" class="tab active" aria-selected="true" aria-controls="python-editor" tabindex="0">Python</button>
+      <button role="tab" id="tab-kitten" class="tab" aria-selected="false" aria-controls="kitten-editor" tabindex="-1">KittenLang</button>
+    </div>
 
-    <section id="content">
-      <section id="panel-output" class="panel active" role="tabpanel" aria-labelledby="tab-output" tabindex="0">
-        <div id="terminal-output" aria-live="polite" aria-atomic="false" aria-label="Terminal output"></div>
-        <div id="terminal-input-container">
-          <input id="terminal-input" aria-label="Terminal input" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" disabled />
-        </div>
-      </section>
-
-      <section id="panel-python" class="panel" role="tabpanel" aria-labelledby="tab-python" tabindex="0">
-        <textarea id="python-editor" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off" aria-label="Python code editor" placeholder="Write Python code here..."></textarea>
-      </section>
-
-      <section id="panel-kitten" class="panel" role="tabpanel" aria-labelledby="tab-kitten" tabindex="0">
-        <textarea id="kitten-editor" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off" aria-label="KittenLang code editor" placeholder="Write KittenLang code here..."></textarea>
-      </section>
-    </section>
-
-    <div id="controls">
-      <button id="runBtn" aria-label="Run Python code">Run 🐱</button>
-      <button id="clearPython">Clear Python</button>
-      <button id="clearKitten">Clear KittenLang</button>
-      <button id="clearTerminal">Clear Terminal</button>
+    <div class="editor-container">
+      <textarea id="python-editor" role="tabpanel" aria-labelledby="tab-python" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off" placeholder="Write Python code here..."></textarea>
+      <textarea id="kitten-editor" role="tabpanel" aria-labelledby="tab-kitten" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off" placeholder="Write KittenLang code here..." style="display:none;"></textarea>
     </div>
   </div>
 
-  <!-- Pyodide -->
-  <script src="https://cdn.jsdelivr.net/pyodide/v0.23.4/full/pyodide.js"></script>
   <script>
-    // === Tab switching logic ===
-    const tabs = document.querySelectorAll(".tab");
-    const panels = document.querySelectorAll(".panel");
-
-    tabs.forEach(tab => {
-      tab.addEventListener("click", () => {
-        // Deactivate all tabs & panels
-        tabs.forEach(t => {
-          t.classList.remove("active");
-          t.setAttribute("aria-selected", "false");
-        });
-        panels.forEach(p => p.classList.remove("active"));
-
-        // Activate clicked tab and panel
-        tab.classList.add("active");
-        tab.setAttribute("aria-selected", "true");
-        const panelId = tab.getAttribute("aria-controls");
-        const panel = document.getElementById(panelId);
-        panel.classList.add("active");
-        panel.focus();
-      });
-    });
-
-    // === KittenLang dictionary ===
+    // Dictionaries for translation
     const pythonToKitten = {
       def: "lick",
       class: "clawss",
@@ -318,227 +223,80 @@
     };
 
     const kittenToPython = Object.fromEntries(
-      Object.entries(pythonToKitten).map(([k, v]) => [v, k])
+      Object.entries(pythonToKitten).map(([k,v]) => [v,k])
     );
 
-    // Operator mappings
-    const operatorPythonToKitten = [
-      [/\!=/g, "!:33"],
-      [/==/g, ":33"],
-      [/>=/g, ">:33"],
-      [/<=/g, "<:33"],
-      [/>>=/g, ">>:3"],
-      [/<<=/g, "<<:3"],
-      [/\*\*=/g, "**:3"],
-      [/\+=/g, "+:3"],
-      [/-=/g, "-:3"],
-      [/\*=/g, "*:3"],
-      [/\/=/g, "/:3"],
-      [/\/\/=/g, "//:3"],
-      [/%=/g, "%:3"],
-      [/&=/g, "&:3"],
-      [/\|=/g, "|:3"],
-      [/\^=/g, "^:3"],
-      [/=/g, ":3"],
-    ];
-
-    const operatorKittenToPython = [
-      [/\!:33/g, "!="],
-      [/:33/g, "=="],
-      [/>:33/g, ">="],
-      [/<:33/g, "<="],
-      [/>>:3/g, ">>="],
-      [/<<:3/g, "<<="],
-      [/\*\*:3/g, "**="],
-      [/\+:3/g, "+="],
-      [/-:3/g, "-="],
-      [/\*:3/g, "*="],
-      [/\/:3/g, "/="],
-      [/\/\/:3/g, "//="],
-      [/%:3/g, "%="],
-      [/&:3/g, "&="],
-      [/\|:3/g, "|="],
-      [/\^:3/g, "^="],
-      [/:3/g, "="],
-    ];
-
+    // Escape regex helper
     function escapeRegex(s) {
-      return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     }
 
-    // Translate Python → KittenLang
-    function pythonToKittenTranslate(code) {
-      operatorPythonToKitten.forEach(([pattern, replacement]) => {
-        code = code.replace(pattern, replacement);
+    // Translation function
+    function translate(code, dict) {
+      const keys = Object.keys(dict).sort((a,b) => b.length - a.length);
+      keys.forEach(k => {
+        const regex = new RegExp(`\\b${escapeRegex(k)}\\b`, 'g');
+        code = code.replace(regex, dict[k]);
       });
-      Object.keys(pythonToKitten)
-        .sort((a, b) => b.length - a.length)
-        .forEach(k => {
-          const regex = new RegExp("\\b" + escapeRegex(k) + "\\b", "g");
-          code = code.replace(regex, pythonToKitten[k]);
-        });
-      return code;
-    }
-
-    // Translate KittenLang → Python
-    function kittenToPythonTranslate(code) {
-      operatorKittenToPython.forEach(([pattern, replacement]) => {
-        code = code.replace(pattern, replacement);
-      });
-      Object.keys(kittenToPython)
-        .sort((a, b) => b.length - a.length)
-        .forEach(k => {
-          const regex = new RegExp("\\b" + escapeRegex(k) + "\\b", "g");
-          code = code.replace(regex, kittenToPython[k]);
-        });
       return code;
     }
 
     // Elements
-    const pythonEditor = document.getElementById("python-editor");
-    const kittenEditor = document.getElementById("kitten-editor");
-    const terminalOutput = document.getElementById("terminal-output");
-    const terminalInput = document.getElementById("terminal-input");
-    const runBtn = document.getElementById("runBtn");
-    const clearPython = document.getElementById("clearPython");
-    const clearKitten = document.getElementById("clearKitten");
-    const clearTerminal = document.getElementById("clearTerminal");
+    const tabPython = document.getElementById('tab-python');
+    const tabKitten = document.getElementById('tab-kitten');
+    const pythonEditor = document.getElementById('python-editor');
+    const kittenEditor = document.getElementById('kitten-editor');
 
-    // Sync python <-> kitten editors automatically on input (debounced)
-    let pythonTimeout, kittenTimeout;
+    // Tab switching function
+    function switchTab(toTab) {
+      if(toTab === 'python') {
+        tabPython.classList.add('active');
+        tabPython.setAttribute('aria-selected', 'true');
+        tabPython.setAttribute('tabindex', '0');
+        tabKitten.classList.remove('active');
+        tabKitten.setAttribute('aria-selected', 'false');
+        tabKitten.setAttribute('tabindex', '-1');
 
-    pythonEditor.addEventListener("input", () => {
-      clearTimeout(pythonTimeout);
-      pythonTimeout = setTimeout(() => {
-        // Convert Python to KittenLang
-        const code = pythonEditor.value;
-        if (!code.trim()) {
-          kittenEditor.value = "";
-          return;
-        }
-        kittenEditor.value = pythonToKittenTranslate(code);
-      }, 300);
-    });
+        pythonEditor.style.display = '';
+        kittenEditor.style.display = 'none';
+        pythonEditor.focus();
+      } else {
+        tabKitten.classList.add('active');
+        tabKitten.setAttribute('aria-selected', 'true');
+        tabKitten.setAttribute('tabindex', '0');
+        tabPython.classList.remove('active');
+        tabPython.setAttribute('aria-selected', 'false');
+        tabPython.setAttribute('tabindex', '-1');
 
-    kittenEditor.addEventListener("input", () => {
-      clearTimeout(kittenTimeout);
-      kittenTimeout = setTimeout(() => {
-        // Convert KittenLang to Python
-        const code = kittenEditor.value;
-        if (!code.trim()) {
-          pythonEditor.value = "";
-          return;
-        }
-        pythonEditor.value = kittenToPythonTranslate(code);
-      }, 300);
-    });
-
-    // --- Pyodide setup ---
-    let pyodideReady = false;
-    let pyodide = null;
-    let inputResolver = null;
-
-    function appendToTerminal(text, isError = false) {
-      const span = document.createElement("span");
-      span.textContent = text;
-      if (isError) span.style.color = "var(--error)";
-      terminalOutput.appendChild(span);
-      terminalOutput.appendChild(document.createElement("br"));
-      terminalOutput.scrollTop = terminalOutput.scrollHeight;
-    }
-
-    async function initPyodide() {
-      appendToTerminal("🐾 Loading Python runtime...");
-      pyodide = await loadPyodide();
-
-      // Override input to await terminal input
-      await pyodide.runPythonAsync(`
-import builtins
-import asyncio
-from js import wait_for_input, enable_terminal_input, disable_terminal_input
-
-async def input_async(prompt=None):
-    if prompt:
-        print(prompt, end='')
-    enable_terminal_input()
-    line = await wait_for_input()
-    disable_terminal_input()
-    return line
-
-builtins.input = input_async
-      `);
-
-      pyodideReady = true;
-      appendToTerminal("🐾 Python runtime ready! Write code and press Run.");
-    }
-
-    // JS functions exposed to Pyodide for input
-    pyodideReady = false;
-    window.wait_for_input = () => {
-      return new Promise(resolve => {
-        inputResolver = resolve;
-        terminalInput.disabled = false;
-        terminalInput.focus();
-      });
-    };
-    window.enable_terminal_input = () => {
-      terminalInput.disabled = false;
-      terminalInput.focus();
-    };
-    window.disable_terminal_input = () => {
-      terminalInput.disabled = true;
-    };
-
-    // Terminal input enter handler
-    terminalInput.addEventListener("keydown", e => {
-      if (e.key === "Enter" && inputResolver) {
-        const val = terminalInput.value;
-        terminalInput.value = "";
-        terminalInput.disabled = true;
-        appendToTerminal("> " + val);
-        inputResolver(val);
-        inputResolver = null;
-      }
-    });
-
-    async function runPythonCode() {
-      if (!pyodideReady) {
-        appendToTerminal("🐾 Python runtime not ready.");
-        return;
-      }
-      terminalOutput.textContent = "";
-      terminalInput.value = "";
-      terminalInput.disabled = true;
-
-      let code = pythonEditor.value.trim();
-      if (!code) {
-        appendToTerminal("🐾 No Python code to run.");
-        return;
-      }
-
-      try {
-        pyodide.setStdout({
-          batched: (s) => appendToTerminal(s),
-        });
-        pyodide.setStderr({
-          batched: (s) => appendToTerminal(s, true),
-        });
-
-        // Run code asynchronously to handle async input calls
-        await pyodide.runPythonAsync(code);
-
-      } catch (err) {
-        appendToTerminal(err.toString(), true);
+        kittenEditor.style.display = '';
+        pythonEditor.style.display = 'none';
+        kittenEditor.focus();
       }
     }
 
-    runBtn.addEventListener("click", runPythonCode);
-    clearPython.addEventListener("click", () => pythonEditor.value = "");
-    clearKitten.addEventListener("click", () => kittenEditor.value = "");
-    clearTerminal.addEventListener("click", () => terminalOutput.textContent = "");
+    tabPython.addEventListener('click', () => switchTab('python'));
+    tabKitten.addEventListener('click', () => switchTab('kitten'));
 
-    // Initialize pyodide on page load
-    initPyodide();
+    // Prevent circular updates
+    let updatingFromPython = false;
+    let updatingFromKitten = false;
+
+    pythonEditor.addEventListener('input', () => {
+      if(updatingFromKitten) return;
+      updatingFromPython = true;
+      kittenEditor.value = translate(pythonEditor.value, pythonToKitten);
+      updatingFromPython = false;
+    });
+
+    kittenEditor.addEventListener('input', () => {
+      if(updatingFromPython) return;
+      updatingFromKitten = true;
+      pythonEditor.value = translate(kittenEditor.value, kittenToPython);
+      updatingFromKitten = false;
+    });
+
+    // Initialize with Python tab active
+    switchTab('python');
   </script>
 </body>
 </html>
