@@ -162,22 +162,31 @@
         margin: 0.5rem 0 1rem 0;
       }
     }
-    /* Hide desktop controls on small screens */
-    @media (max-width: 600px) {
-      #desktop-controls {
-        display: none;
-      }
-      #mobile-controls {
-        display: block;
-      }
+  #controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1rem;
+  }
+  
+  #extraControls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    width: 100%;
+  }
+  
+  /* On desktop, show all controls inline */
+  @media (min-width: 601px) {
+    #toggleExtraControls {
+      display: none;
     }
-    
-    /* Hide mobile dropdown on large screens */
-    @media (min-width: 601px) {
-      #mobile-controls {
-        display: none;
-      }
+    #extraControls {
+      display: flex !important;
+      margin-top: 0;
+      width: auto;
     }
+  }
 
   </style>
 </head>
@@ -206,23 +215,18 @@
   <div id="controls">
     <button id="runBtn" aria-label="Run Python code">Run 🐱</button>
   
-    <details id="mobile-controls" style="display:none;">
-      <summary style="cursor:pointer; color: var(--accent); font-weight:700; font-size:1rem; user-select:none;">
-        Other Controls ▼
-      </summary>
-      <div style="display:flex; flex-direction: column; gap: 0.5rem; margin-top: 0.5rem;">
-        <button id="clearLeft" aria-label="Clear left input">Clear Left</button>
-        <button id="clearRight" aria-label="Clear right output">Clear Right</button>
-        <button id="clearTerminal" aria-label="Clear terminal output">Clear Terminal</button>
-      </div>
-    </details>
+    <button id="toggleExtraControls" aria-expanded="false" aria-controls="extraControls" 
+      style="margin-left: 1rem; border-radius: 15px; background: var(--accent); color: white; font-weight: 700; font-size: 1rem; cursor: pointer;">
+      Show Controls ▼
+    </button>
   
-    <div id="desktop-controls" style="display:flex; gap:1rem;">
+    <div id="extraControls" style="display:none; gap:1rem; margin-top: 0.5rem;">
       <button id="clearLeft" aria-label="Clear left input">Clear Left</button>
       <button id="clearRight" aria-label="Clear right output">Clear Right</button>
       <button id="clearTerminal" aria-label="Clear terminal output">Clear Terminal</button>
     </div>
   </div>
+
 
 
   <div id="terminal" role="region" aria-live="polite" aria-atomic="false" aria-label="Terminal output">
@@ -567,5 +571,6 @@ builtins.input = input_override
   </script>
 </body>
 </html>
+
 
 
