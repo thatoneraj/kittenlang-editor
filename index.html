@@ -26,6 +26,7 @@
       height: 100vh;
       background: var(--bg);
       color: var(--text);
+      overflow: hidden;
     }
     h1 {
       text-align: center;
@@ -35,6 +36,7 @@
       letter-spacing: 0.1em;
       color: var(--accent);
       user-select: none;
+      flex-shrink: 0;
     }
     #container {
       flex: 1;
@@ -43,6 +45,7 @@
       gap: 1rem;
       padding: 1rem;
       min-height: 0;
+      overflow: hidden;
     }
     textarea {
       flex: 1;
@@ -58,6 +61,7 @@
       overflow-y: auto;
       min-height: 300px;
       transition: border-color 0.3s ease;
+      min-width: 0;
     }
     textarea:focus {
       outline: none;
@@ -90,10 +94,11 @@
       gap: 1rem;
       margin: 1rem 0 0 0;
       flex-wrap: wrap;
-      align-items: center;
+      flex-shrink: 0;
+      padding: 0 1rem;
     }
     button {
-      padding: 0.6rem 1.2rem;
+      padding: 0.5rem 1rem;
       border: none;
       border-radius: 15px;
       background: var(--accent);
@@ -105,13 +110,15 @@
       transition: background-color 0.3s ease;
       user-select: none;
       flex-shrink: 0;
+      min-width: 80px;
+      text-align: center;
     }
     button:hover, button:focus {
       background: var(--error);
       outline: none;
     }
     #terminal {
-      margin: 1rem;
+      margin: 1rem 1rem 1rem 1rem;
       background: var(--bg-dark);
       border-radius: 10px;
       border: 2px solid var(--border);
@@ -121,6 +128,7 @@
       overflow: hidden;
       font-family: monospace;
       color: var(--text);
+      flex-shrink: 0;
     }
     #terminal-output {
       flex: 1;
@@ -149,45 +157,65 @@
     #terminal-input:focus {
       outline: none;
     }
-    /* Responsive: stack vertically on small screens */
-    @media (max-width: 900px) {
+    #extraControls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      width: 100%;
+      justify-content: center;
+    }
+    #toggleExtraControls {
+      padding: 0.3rem 0.6rem;
+      font-size: 0.85rem;
+      border-radius: 12px;
+      min-width: auto;
+      background: var(--accent-light);
+      color: var(--accent);
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: none;
+      border: 2px solid var(--accent);
+      user-select: none;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+    #toggleExtraControls:hover, #toggleExtraControls:focus {
+      background: var(--accent);
+      color: white;
+      outline: none;
+    }
+
+    /* Responsive - stack panels vertically on narrow screens */
+    @media (max-width: 700px) {
       #container {
         flex-direction: column;
         padding: 1rem 0.5rem;
+        gap: 0.75rem;
+      }
+      .panel {
+        min-height: 200px;
       }
       textarea {
         min-height: 180px;
+        font-size: 13px;
       }
       #terminal {
         height: 180px;
         margin: 0.5rem 0 1rem 0;
       }
+      #controls {
+        padding: 0 0.5rem;
+      }
+      button {
+        font-size: 0.9rem;
+        padding: 0.45rem 0.9rem;
+        min-width: 70px;
+      }
+      #extraControls {
+        justify-content: center;
+      }
     }
-    #toggleExtraControls {
-      padding: 0.3rem 0.6rem;
-      font-size: 0.8rem;
-      border-radius: 10px;
-      background: var(--accent);
-      color: white;
-      user-select: none;
-      cursor: pointer;
-      box-shadow: 0 2px 4px rgba(214,107,160,0.5);
-      transition: background-color 0.3s ease;
-      flex-shrink: 0;
-    }
-    #toggleExtraControls:hover,
-    #toggleExtraControls:focus {
-      background: var(--error);
-      outline: none;
-    }
-    #extraControls {
-      display: none;
-      gap: 1rem;
-      margin-top: 0.5rem;
-      flex-wrap: wrap;
-      justify-content: center;
-    }
-    /* On desktop, show all controls inline */
+
+    /* On desktop, show extra controls inline and hide toggle */
     @media (min-width: 601px) {
       #toggleExtraControls {
         display: none;
@@ -198,6 +226,7 @@
         width: auto;
       }
     }
+
   </style>
 </head>
 <body>
@@ -225,12 +254,11 @@
   <div id="controls">
     <button id="runBtn" aria-label="Run Python code">Run 🐱</button>
   
-    <button id="toggleExtraControls" aria-expanded="false" aria-controls="extraControls" 
-      title="Show/Hide extra controls">
-      ▼
+    <button id="toggleExtraControls" aria-expanded="false" aria-controls="extraControls" >
+      Show Controls ▼
     </button>
   
-    <div id="extraControls">
+    <div id="extraControls" style="display:none; gap:1rem; margin-top: 0.5rem;">
       <button id="clearLeft" aria-label="Clear left input">Clear Left</button>
       <button id="clearRight" aria-label="Clear right output">Clear Right</button>
       <button id="clearTerminal" aria-label="Clear terminal output">Clear Terminal</button>
@@ -402,8 +430,6 @@
     const clearTerminal = document.getElementById("clearTerminal");
     const terminalOutput = document.getElementById("terminal-output");
     const terminalInput = document.getElementById("terminal-input");
-    const toggleBtn = document.getElementById("toggleExtraControls");
-    const extraControls = document.getElementById("extraControls");
 
     // Prevent circular events on editing
     let isUpdatingLeft = false;
@@ -442,20 +468,6 @@
       isUpdatingLeft = false;
     });
 
-    // Toggle extra controls
-    toggleBtn.addEventListener("click", () => {
-      const isVisible = extraControls.style.display === "flex";
-      if (isVisible) {
-        extraControls.style.display = "none";
-        toggleBtn.textContent = "▼";
-        toggleBtn.setAttribute("aria-expanded", "false");
-      } else {
-        extraControls.style.display = "flex";
-        toggleBtn.textContent = "▲";
-        toggleBtn.setAttribute("aria-expanded", "true");
-      }
-    });
-
     // --- Pyodide setup and interactive terminal ---
 
     let pyodideReady = false;
@@ -485,122 +497,135 @@ import builtins
 import asyncio
 
 async def input_override(prompt=None):
-    from js import enable_terminal_input, disable_terminal_input, wait_for_input
+    from js import enableInputLine
+    enableInputLine()
     if prompt:
-        print(prompt, end='')
-    enable_terminal_input()
-    line = await wait_for_input()
-    disable_terminal_input()
-    return line
+        print(prompt, end="", flush=True)
+    from js import getInputFromUser
+    user_input = await getInputFromUser()
+    return user_input
 
 builtins.input = input_override
       `);
 
-      // JS functions exposed to Pyodide for async input
-      pyodide.globals.set("wait_for_input", () => {
-        return new Promise(resolve => {
-          inputResolver = resolve;
-          terminalInput.disabled = false;
-          terminalInput.focus();
-        });
-      });
-
-      window.disable_terminal_input = () => {
-        terminalInput.disabled = true;
-      };
-      window.enable_terminal_input = () => {
-        terminalInput.disabled = false;
-        terminalInput.focus();
-      };
-
       pyodideReady = true;
-      appendToTerminal("🐾 Python runtime ready! Paste your Python or KittenLang code and hit Run.");
+      appendToTerminal("🐾 Python runtime loaded. Ready to run code.");
     }
+    initPyodide();
 
-    // When user presses Enter in terminal input, resolve promise with input line
-    terminalInput.addEventListener("keydown", e => {
-      if (e.key === "Enter" && inputResolver) {
+    // JS helper to enable input line and wait for user input
+    window.enableInputLine = function () {
+      terminalInput.disabled = false;
+      terminalInput.focus();
+    };
+    window.getInputFromUser = function () {
+      return new Promise((resolve) => {
+        inputResolver = resolve;
+      });
+    };
+
+    terminalInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && !terminalInput.disabled) {
+        e.preventDefault();
         const val = terminalInput.value;
         terminalInput.value = "";
         terminalInput.disabled = true;
-        appendToTerminal("> " + val);
-        inputResolver(val);
-        inputResolver = null;
+        appendToTerminal(val);
+        if (inputResolver) {
+          inputResolver(val);
+          inputResolver = null;
+        }
       }
     });
 
-    // Run Python code
-    async function runPythonCode() {
-    if (!pyodideReady) {
-        appendToTerminal("🐾 Python runtime is not ready yet.");
+    // Run code button
+    runBtn.addEventListener("click", async () => {
+      if (!pyodideReady) {
+        appendToTerminal("🐾 Python runtime not ready yet. Please wait...");
         return;
-    }
-    terminalOutput.textContent = "";
-    terminalInput.value = "";
-    terminalInput.disabled = true;
+      }
 
-    let codeLeft = leftInput.value.trim();
-    let codeRight = rightOutput.value.trim();
+      terminalOutput.textContent = "";
+      terminalInput.value = "";
+      terminalInput.disabled = true;
 
-    // We want to run Python code, so first check if left or right has KittenLang and translate them
+      let codeLeft = leftInput.value.trim();
+      let codeRight = rightOutput.value.trim();
 
-    // We'll assume left is "main" source if not empty, else right
-    let codeToRun = "";
+      // Determine which side to run:
+      // If left has code, run left (translated if needed)
+      // else run right (translated if needed)
+      let codeToRun = "";
+      const isLeftKitten = Object.keys(kittenToPython).some(w => codeLeft.includes(w));
+      const isRightKitten = Object.keys(kittenToPython).some(w => codeRight.includes(w));
 
-    // Heuristic: if left input contains KittenLang keywords → translate left to Python and run
-    const isLeftKitten = Object.keys(kittenToPython).some(w => codeLeft.includes(w));
-    const isRightKitten = Object.keys(kittenToPython).some(w => codeRight.includes(w));
-
-    if (codeLeft.length > 0) {
+      if (codeLeft.length > 0) {
         if (isLeftKitten) {
-        codeToRun = kittenToPythonTranslate(codeLeft);
-        rightOutput.value = codeToRun; // sync right side
+          codeToRun = kittenToPythonTranslate(codeLeft);
+          rightOutput.value = codeToRun;
         } else {
-        codeToRun = codeLeft; // assume Python
-        rightOutput.value = pythonToKittenTranslate(codeLeft); // sync right side
+          codeToRun = codeLeft;
+          rightOutput.value = pythonToKittenTranslate(codeLeft);
         }
-    } else if (codeRight.length > 0) {
-        // If left is empty, run right side (assumed Python or translate if Kitten)
+      } else if (codeRight.length > 0) {
         if (isRightKitten) {
-        codeToRun = kittenToPythonTranslate(codeRight);
-        leftInput.value = codeToRun; // sync left side
+          codeToRun = kittenToPythonTranslate(codeRight);
+          leftInput.value = codeToRun;
         } else {
-        codeToRun = codeRight;
-        leftInput.value = pythonToKittenTranslate(codeRight);
+          codeToRun = codeRight;
+          leftInput.value = pythonToKittenTranslate(codeRight);
         }
-    } else {
+      } else {
         appendToTerminal("🐾 No code to run!");
         return;
-    }
+      }
 
-    try {
+      try {
         pyodide.setStdout({
-        batched: (s) => appendToTerminal(s),
+          batched: (s) => appendToTerminal(s),
         });
         pyodide.setStderr({
-        batched: (s) => appendToTerminal(s, true),
+          batched: (s) => appendToTerminal(s, true),
         });
 
         await pyodide.runPythonAsync(codeToRun);
         appendToTerminal("🐾 Program finished.");
-    } catch (err) {
+      } catch (err) {
         appendToTerminal("🐾 Error: " + err.message, true);
-    } finally {
+      } finally {
         terminalInput.disabled = true;
         inputResolver = null;
-    }
-    }
+      }
+    });
 
+    // Clear buttons
+    clearLeft.addEventListener("click", () => {
+      leftInput.value = "";
+      rightOutput.value = "";
+    });
+    clearRight.addEventListener("click", () => {
+      rightOutput.value = "";
+      leftInput.value = "";
+    });
+    clearTerminal.addEventListener("click", () => {
+      terminalOutput.textContent = "";
+    });
 
-    // Clear handlers
-    clearLeft.onclick = () => { leftInput.value = ""; rightOutput.value = ""; };
-    clearRight.onclick = () => { rightOutput.value = ""; leftInput.value = ""; };
-    clearTerminal.onclick = () => { terminalOutput.textContent = ""; };
-
-    runBtn.onclick = runPythonCode;
-
-    window.onload = initPyodide;
-
+    // Toggle extra controls button
+    const toggleExtraControls = document.getElementById("toggleExtraControls");
+    const extraControls = document.getElementById("extraControls");
+    toggleExtraControls.addEventListener("click", () => {
+      const expanded = toggleExtraControls.getAttribute("aria-expanded") === "true";
+      if (expanded) {
+        extraControls.style.display = "none";
+        toggleExtraControls.textContent = "Show Controls ▼";
+        toggleExtraControls.setAttribute("aria-expanded", "false");
+      } else {
+        extraControls.style.display = "flex";
+        toggleExtraControls.textContent = "Hide Controls ▲";
+        toggleExtraControls.setAttribute("aria-expanded", "true");
+      }
+    });
   </script>
 </body>
 </html>
