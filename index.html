@@ -567,10 +567,26 @@ builtins.input = input_override
     runBtn.onclick = runPythonCode;
 
     window.onload = initPyodide;
+const toggleBtn = document.getElementById("toggleExtraControls");
+const extraControls = document.getElementById("extraControls");
+
+toggleBtn.addEventListener("click", () => {
+  const isVisible = extraControls.style.display === "flex";
+  if (isVisible) {
+    extraControls.style.display = "none";
+    toggleBtn.textContent = "Show Controls ▼";
+    toggleBtn.setAttribute("aria-expanded", "false");
+  } else {
+    extraControls.style.display = "flex";
+    toggleBtn.textContent = "Hide Controls ▲";
+    toggleBtn.setAttribute("aria-expanded", "true");
+  }
+});
 
   </script>
 </body>
 </html>
+
 
 
 
